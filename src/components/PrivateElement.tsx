@@ -1,7 +1,9 @@
 import * as React from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useAuthContext } from "../contexts/AuthContext";
 import { Role } from "../hooks/useAuth";
+import { useEffect, useState } from "react";
+import { Spinner } from "grommet";
 
 type Props = {
   children: React.ReactElement;
@@ -16,13 +18,18 @@ export function PrivateElement({
 }: Props) {
   const [logged, getUser] = useAuthContext();
   const navigate = useNavigate();
+  const [accepted, setAccepted] = useState(false);
 
-  onlyFor === "guest" && logged && navigate(onFailureNavigateTo ?? "/logout");
-  onlyFor === "logged" && !logged && navigate(onFailureNavigateTo ?? "/login");
-  Object.values(Role).includes(onlyFor) &&
-    logged &&
-    getUser().role !== onlyFor &&
-    navigate(onFailureNavigateTo ?? "/logout");
+  if (onlyFor === "guest" && logged) {
+    return <Navigate to={onFailureNavigateTo ?? "/logout"} />;
+  } else if (onlyFor === "logged" && !logged) {
+    return <Navigate to={onFailureNavigateTo ?? "/login"} />;
+  } else if (
+    Object.values(Role).includes(onlyFor) &&
+    (!logged || (logged && getUser().role !== onlyFor))
+  ) {
+    return <Navigate to={onFailureNavigateTo ?? "/logout"} />;
+  }
 
   return children;
 }
